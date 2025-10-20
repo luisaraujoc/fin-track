@@ -1,7 +1,7 @@
 // src/invoices/invoice-limit.service.ts
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { Invoice } from './entities/invoice.entity';
 import { PaymentMethod } from '../payment-methods/entities/payment-method.entity';
 
@@ -319,7 +319,7 @@ export class InvoiceLimitService {
   }> {
     try {
       const invoices = await this.invoicesRepository.find({
-        where: { userId, isActive: true, creditLimit: () => 'credit_limit IS NOT NULL' }
+        where: { userId, isActive: true, creditLimit: Not(IsNull()) }
       });
 
       let totalLimit = 0;

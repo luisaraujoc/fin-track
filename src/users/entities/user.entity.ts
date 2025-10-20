@@ -16,6 +16,9 @@ import { Category } from '../../categories/entities/category.entity';
 import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
 import { Invoice } from '../../invoices/entities/invoice.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
+import { CreditCard } from '../../credit-cards/entities/credit-card.entity';
+import { Forecast } from '../../forecasts/entities/forecast.entity';
+import { Report } from '../../reports/entities/report.entity';
 
 @Entity('users')
 export class User {
@@ -105,6 +108,27 @@ export class User {
   })
   @OneToMany(() => Category, (category) => category.user)
   categories: Category[];
+
+  @ApiProperty({
+    description: 'Cartões de crédito do usuário',
+    type: () => [CreditCard],
+  })
+  @OneToMany(() => CreditCard, (creditCard) => creditCard.user)
+  creditCards: CreditCard[];
+
+  @ApiProperty({
+    description: 'Previsões do usuário',
+    type: () => [Forecast],
+  })
+  @OneToMany(() => Forecast, (forecast) => forecast.user)
+  forecasts: Forecast[];
+
+  @ApiProperty({
+    description: 'Relatórios do usuário',
+    type: () => [Report],
+  })
+  @OneToMany(() => Report, (report) => report.user)
+  reports: Report[];
 
   @ApiProperty({
     description: 'Idioma preferido',

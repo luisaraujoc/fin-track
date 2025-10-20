@@ -18,6 +18,13 @@ import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TransactionsModule } from './transactions/transactions.module';
 import { Transaction } from './transactions/entities/transaction.entity';
+import { CreditCard } from './credit-cards/entities/credit-card.entity';
+import { CreditCardTransaction } from './credit-cards/entities/credit-card-transaction.entity';
+import { CreditCardsModule } from './credit-cards/credit-cards.module';
+import { Forecast } from './forecasts/entities/forecast.entity';
+import { ForecastsModule } from './forecasts/forecasts.module';
+import { Report } from './reports/entities/report.entity';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -34,7 +41,7 @@ import { Transaction } from './transactions/entities/transaction.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Category, Invoice, PaymentMethod, Transaction],
+        entities: [User, Category, Invoice, PaymentMethod, Transaction, CreditCard, CreditCardTransaction, Forecast, Report],
         synchronize: configService.get('DB_SYNCHRONIZE') === 'true',
         logging: configService.get('DB_LOGGING') === 'true',
       }),
@@ -46,6 +53,9 @@ import { Transaction } from './transactions/entities/transaction.entity';
     InvoicesModule,
     PaymentMethodsModule,
     TransactionsModule,
+    CreditCardsModule,
+    ForecastsModule,
+    ReportsModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

@@ -4,6 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '../../users/entities/user.entity';
 import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
+import { CreditCard } from '../../credit-cards/entities/credit-card.entity';
 
 export enum InvoiceStatus {
   OPEN = 'open',
@@ -156,6 +157,13 @@ export class Invoice {
   })
   @OneToMany(() => Transaction, transaction => transaction.invoice)
   transactions: Transaction[];
+
+  @ApiProperty({
+    description: 'Cartões de crédito vinculados a esta fatura',
+    type: () => [CreditCard],
+  })
+  @OneToMany(() => CreditCard, creditCard => creditCard.invoices)
+  creditCards: CreditCard[];
 
   @ApiProperty({
     description: 'Data de criação',
