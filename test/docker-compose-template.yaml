@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: fin_track
+    environment:
+      POSTGRES_DB: fintrack_db
+      POSTGRES_USER: fintrack_user
+      POSTGRES_PASSWORD: fintrack_password
+    ports:
+      - "5433:5432"  # Mapeia para 5433 externo, 5432 interno
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

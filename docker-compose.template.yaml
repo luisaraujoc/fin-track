@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fin_track_db
+    environment:
+      POSTGRES_DB: fintrack_db
+      POSTGRES_USER: fintrack_user
+      POSTGRES_PASSWORD: fintrack_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - fin_track_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: fintrack_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@fintrack.com
+      PGADMIN_DEFAULT_PASSWORD: fintrack_password
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    networks:
+      - fin_track_network
+
+volumes:
+  postgres_data:
+
+networks:
+  fin_track_network:
+    driver: bridge
