@@ -1,5 +1,10 @@
 // src/users/users.service.ts
-import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -24,7 +29,7 @@ export class UsersService {
       const existingUserByUsername = await this.usersRepository.findOne({
         where: { username: createUserDto.username },
       });
-      
+
       if (existingUserByUsername) {
         throw new ConflictException('Username já está em uso');
       }
@@ -54,7 +59,10 @@ export class UsersService {
   /**
    * Busca todos os usuários (com paginação)
    */
-  async findAll(page: number = 1, limit: number = 10): Promise<{ users: UserResponseDto[]; total: number }> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ users: UserResponseDto[]; total: number }> {
     try {
       const [users, total] = await this.usersRepository.findAndCount({
         where: { isActive: true },
@@ -63,8 +71,8 @@ export class UsersService {
         order: { createdAt: 'DESC' },
       });
 
-      const userDtos = users.map(user => new UserResponseDto(user));
-      
+      const userDtos = users.map((user) => new UserResponseDto(user));
+
       return {
         users: userDtos,
         total,
@@ -105,7 +113,9 @@ export class UsersService {
         where: { email, isActive: true },
       });
     } catch (error) {
-      throw new InternalServerErrorException('Erro ao buscar usuário por email');
+      throw new InternalServerErrorException(
+        'Erro ao buscar usuário por email',
+      );
     }
   }
 
@@ -118,14 +128,19 @@ export class UsersService {
         where: { username, isActive: true },
       });
     } catch (error) {
-      throw new InternalServerErrorException('Erro ao buscar usuário por username');
+      throw new InternalServerErrorException(
+        'Erro ao buscar usuário por username',
+      );
     }
   }
 
   /**
    * Atualiza um usuário
    */
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
     try {
       const user = await this.usersRepository.findOne({
         where: { id, isActive: true },
@@ -140,7 +155,7 @@ export class UsersService {
         const existingUser = await this.usersRepository.findOne({
           where: { username: updateUserDto.username },
         });
-        
+
         if (existingUser) {
           throw new ConflictException('Username já está em uso');
         }
@@ -151,7 +166,7 @@ export class UsersService {
         const existingUser = await this.usersRepository.findOne({
           where: { email: updateUserDto.email },
         });
-        
+
         if (existingUser) {
           throw new ConflictException('Email já está em uso');
         }
@@ -166,11 +181,14 @@ export class UsersService {
         const saltRounds = 12;
         user.password = await bcrypt.hash(password, saltRounds);
       }
-      
+
       const updatedUser = await this.usersRepository.save(user);
       return new UserResponseDto(updatedUser);
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ConflictException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Erro ao atualizar usuário');
@@ -237,7 +255,7 @@ export class UsersService {
 
       user.emailVerified = true;
       const updatedUser = await this.usersRepository.save(user);
-      
+
       return new UserResponseDto(updatedUser);
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -250,11 +268,19 @@ export class UsersService {
   /**
    * Busca estatísticas de usuários (para dashboard futuro)
    */
-  async getStats(): Promise<{ totalUsers: number; activeUsers: number; verifiedUsers: number }> {
+  async getStats(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    verifiedUsers: number;
+  }> {
     try {
       const totalUsers = await this.usersRepository.count();
-      const activeUsers = await this.usersRepository.count({ where: { isActive: true } });
-      const verifiedUsers = await this.usersRepository.count({ where: { emailVerified: true } });
+      const activeUsers = await this.usersRepository.count({
+        where: { isActive: true },
+      });
+      const verifiedUsers = await this.usersRepository.count({
+        where: { emailVerified: true },
+      });
 
       return {
         totalUsers,

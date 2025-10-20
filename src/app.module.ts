@@ -11,6 +11,13 @@ import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
 import { Category } from './categories/entities/category.entity';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { Invoice } from './invoices/entities/invoice.entity';
+import { PaymentMethod } from './payment-methods/entities/payment-method.entity';
+import { InvoicesModule } from './invoices/invoices.module';
+import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TransactionsModule } from './transactions/transactions.module';
+import { Transaction } from './transactions/entities/transaction.entity';
 
 @Module({
   imports: [
@@ -27,7 +34,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Category],
+        entities: [User, Category, Invoice, PaymentMethod, Transaction],
         synchronize: configService.get('DB_SYNCHRONIZE') === 'true',
         logging: configService.get('DB_LOGGING') === 'true',
       }),
@@ -36,6 +43,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     UsersModule,
     AuthModule,
     CategoriesModule,
+    InvoicesModule,
+    PaymentMethodsModule,
+    TransactionsModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

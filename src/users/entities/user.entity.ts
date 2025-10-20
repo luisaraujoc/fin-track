@@ -13,6 +13,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
 import { Currency, Language, Timezone } from '../../common/enums';
 import { Category } from '../../categories/entities/category.entity';
+import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
+import { Invoice } from '../../invoices/entities/invoice.entity';
+import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity('users')
 export class User {
@@ -74,6 +77,27 @@ export class User {
     default: Currency.BRL,
   })
   currency: Currency;
+
+  @ApiProperty({
+    description: 'Métodos de pagamento do usuário',
+    type: () => [PaymentMethod],
+  })
+  @OneToMany(() => PaymentMethod, (paymentMethod) => paymentMethod.user)
+  paymentMethods: PaymentMethod[];
+
+  @ApiProperty({
+    description: 'Faturas do usuário',
+    type: () => [Invoice],
+  })
+  @OneToMany(() => Invoice, (invoice) => invoice.user)
+  invoices: Invoice[];
+
+  @ApiProperty({
+    description: 'Transações do usuário',
+    type: () => [Transaction],
+  })
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[];
 
   @ApiProperty({
     description: 'Categorias do usuário',

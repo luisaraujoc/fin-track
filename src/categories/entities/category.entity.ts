@@ -4,6 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '../../users/entities/user.entity';
 import { CategoryIcon, IconLibraries } from '../../common/enums';
 import { CategoryType } from './category-type.enum';
+import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity('categories')
 export class Category {
@@ -103,6 +104,13 @@ export class Category {
   })
   @ManyToOne(() => User, user => user.categories, { onDelete: 'CASCADE' })
   user: User;
+
+  @ApiProperty({
+    description: 'Transações associadas à categoria',
+    type: () => [Transaction],
+  })
+  @OneToMany(() => Transaction, (transaction) => transaction.category)
+  transactions: Transaction[];
 
   @ApiProperty({
     description: 'Data de criação',
