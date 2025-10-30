@@ -1,17 +1,17 @@
 // src/users/entities/user.entity.ts
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
   OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
-import { Currency, Language, Timezone } from '../../common/enums';
+import { Currency, Language, Timezone, AuthProvider } from '../../common/enums';
 import { Category } from '../../categories/entities/category.entity';
 import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
 import { Invoice } from '../../invoices/entities/invoice.entity';
@@ -34,7 +34,7 @@ export class User {
     example: 'joaosilva',
     maxLength: 50,
   })
-  @Column({ unique: true, length: 50 })
+  @Column({ unique: true, length: 50, nullable: true }) // Pode ser null para usuários OAuth
   username: string;
 
   @ApiProperty({
@@ -65,8 +65,35 @@ export class User {
     example: '$2b$12$hashedpassword',
     writeOnly: true,
   })
-  @Column()
+  @Column({ nullable: true }) // Pode ser null para usuários OAuth
   password: string;
+
+  @ApiProperty({
+    description: 'Provedor de autenticação',
+    enum: AuthProvider,
+    example: AuthProvider.LOCAL,
+    default: AuthProvider.LOCAL,
+  })
+  @Column({
+    type: 'enum',
+    enum: AuthProvider,
+    default: AuthProvider.LOCAL,
+  })
+  authProvider: AuthProvider;
+
+  @ApiPropertyOptional({
+    description: 'ID do usuário no provedor OAuth (ex: Google)',
+    example: '1234567890',
+  })
+  @Column({ name: 'provider_id', nullable: true, unique: true })
+  providerId: string;
+
+  @ApiPropertyOptional({
+    description: 'URL da foto de perfil do provedor OAuth',
+    example: 'https://lh3.googleusercontent.com/a/...',
+  })
+  @Column({ name: 'profile_picture_url', nullable: true, length: 500 })
+  profilePictureUrl: string;
 
   @ApiProperty({
     description: 'Moeda padrão do usuário',
@@ -199,24 +226,33 @@ export class User {
 
   /**
    * Hook executado antes de inserir um novo usuário
-   * Faz o hash da password
+   * Faz o hash da password apenas se for provedor local
    */
   @BeforeInsert()
   async hashPasswordBeforeInsert(): Promise<void> {
-    if (this.password) {
+    if (this.password && this.authProvider === AuthProvider.LOCAL) {
       const saltRounds = 12;
       this.password = await bcrypt.hash(this.password, saltRounds);
+    }
+
+    // Para usuários OAuth, marcar email como verificado
+    if (this.authProvider === AuthProvider.GOOGLE) {
+      this.emailVerified = true;
+
+      // Gerar username baseado no email se não fornecido
+      if (!this.username) {
+        this.username = this.generateUsernameFromEmail();
+      }
     }
   }
 
   /**
    * Hook executado antes de atualizar um usuário
-   * Faz o hash da password apenas se ela foi alterada
+   * Faz o hash da password apenas se ela foi alterada e for provedor local
    */
   @BeforeUpdate()
   async hashPasswordBeforeUpdate(): Promise<void> {
-    // Only hash if password was changed
-    if (this.tempPassword && this.tempPassword !== this.password) {
+    if (this.tempPassword && this.tempPassword !== this.password && this.authProvider === AuthProvider.LOCAL) {
       const saltRounds = 12;
       this.password = await bcrypt.hash(this.password, saltRounds);
     }
@@ -229,8 +265,38 @@ export class User {
    * @returns Promise<boolean> True se a password for válida
    */
   async validatePassword(password: string): Promise<boolean> {
+    if (!this.password || this.authProvider !== AuthProvider.LOCAL) {
+      return false;
+    }
     return bcrypt.compare(password, this.password);
   }
+
+  /**
+   * Gera username a partir do email
+   */
+  private generateUsernameFromEmail(): string {
+    const baseUsername = this.email.split('@')[0];
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    return `${baseUsername}_${randomSuffix}`;
+  }
+
+  /**
+   * Cria usuário a partir de dados do Google
+   */
+  static createFromGoogle(profile: any): User {
+    const user = new User();
+    user.authProvider = AuthProvider.GOOGLE;
+    user.providerId = profile.id;
+    user.email = profile.emails[0].value;
+    user.firstName = profile.name.givenName;
+    user.lastName = profile.name.familyName;
+    user.profilePictureUrl = profile.photos?.[0]?.value;
+    user.emailVerified = true;
+    user.username = user.generateUsernameFromEmail();
+
+    return user;
+  }
+
 
   /**
    * Atualiza a data do último login para o momento atual

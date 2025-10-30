@@ -6,9 +6,11 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { OAuthController } from './oauth.controller';
 import { UsersModule } from '../users/users.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
@@ -21,8 +23,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       useFactory: async (
         configService: ConfigService,
       ): Promise<JwtModuleOptions> => {
-        const expiresIn = (configService.get<StringValue>('JWT_EXPIRES_IN') ??
-          '7d') as StringValue;
+        const expiresIn =
+          configService.get<StringValue>('JWT_EXPIRES_IN') ?? '7d';
 
         return {
           secret: configService.get<string>('JWT_SECRET') ?? 'secretKey',
@@ -31,11 +33,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, OAuthController], // ADICIONAR OAuthController
   providers: [
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    GoogleStrategy,
     JwtAuthGuard,
   ],
   exports: [AuthService, JwtAuthGuard],

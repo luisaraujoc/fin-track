@@ -1,10 +1,5 @@
 // src/users/users.service.ts
-import {
-  Injectable,
-  ConflictException,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +7,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { AuthProvider } from '../common/enums';
 
 @Injectable()
 export class UsersService {
@@ -290,5 +286,132 @@ export class UsersService {
     } catch (error) {
       throw new InternalServerErrorException('Erro ao buscar estatísticas');
     }
+  }
+
+  //   Google Auth
+  /**
+   * Busca usuário por provider ID
+   */
+  async findByProviderId(
+    provider: AuthProvider,
+    providerId: string,
+  ): Promise<User | null> {
+    try {
+      return await this.usersRepository.findOne({
+        where: {
+          authProvider: provider,
+          providerId,
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Erro ao buscar usuário por provider ID',
+      );
+    }
+  }
+
+  /**
+   * Cria usuário a partir de dados OAuth - agora retorna User entity
+   */
+  async createFromOAuth(oauthData: {
+    provider: AuthProvider;
+    providerId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    profilePictureUrl?: string;
+  }): Promise<User> {
+    // Mudar para User em vez de UserResponseDto
+    try {
+      const user = this.usersRepository.create({
+        authProvider: oauthData.provider,
+        providerId: oauthData.providerId,
+        email: oauthData.email,
+        firstName: oauthData.firstName,
+        lastName: oauthData.lastName,
+        profilePictureUrl: oauthData.profilePictureUrl,
+        emailVerified: true,
+        // Gera username automaticamente se não fornecido
+        username:
+          oauthData.email.split('@')[0] +
+          '_' +
+          Math.random().toString(36).substring(2, 8),
+      });
+
+
+
+      return await this.usersRepository.save(user); // Retornar a entidade User
+    } catch (error) {
+      throw new InternalServerErrorException('Erro ao criar usuário OAuth');
+    }
+  }
+
+  /**
+   * Vincula provedor OAuth a usuário existente
+   */
+  async linkOAuthProvider(
+    userId: string,
+    oauthData: {
+      provider: AuthProvider;
+      providerId: string;
+      profilePictureUrl?: string;
+    },
+  ): Promise<User> {
+    // Mudar para User em vez de UserResponseDto
+    try {
+      const user = await this.usersRepository.findOne({
+        where: { id: userId, isActive: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      // Atualizar para provedor OAuth
+      user.authProvider = oauthData.provider;
+      user.providerId = oauthData.providerId;
+      user.profilePictureUrl = oauthData.profilePictureUrl;
+      user.emailVerified = true;
+
+      const updatedUser = await this.usersRepository.save(user);
+      return updatedUser; // Retornar a entidade User
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Erro ao vincular provedor OAuth');
+    }
+  }
+
+  /**
+   * Busca usuário por ID - agora retorna User entity (para auth)
+   */
+  async findOneEntity(id: string): Promise<User> {
+    try {
+      const user = await this.usersRepository.findOne({
+        where: { id, isActive: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      return user; // Retornar a entidade User
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Erro ao buscar usuário');
+    }
+  }
+
+  /**
+   * Gera username único a partir do email
+   */
+  private generateUsernameFromEmail(email: string): string {
+    const baseUsername = email.split('@')[0];
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    return `${baseUsername}_${randomSuffix}`;
   }
 }

@@ -1,7 +1,7 @@
 // src/users/dto/user-response.dto.ts
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { User } from '../entities/user.entity';
-import { Currency, Language, Timezone } from '../../common/enums';
+import { Currency, Language, Timezone, AuthProvider } from '../../common/enums';
 
 export class UserResponseDto {
   @ApiProperty()
@@ -28,6 +28,15 @@ export class UserResponseDto {
   @ApiProperty({ enum: Timezone })
   timezone: Timezone;
 
+  @ApiProperty({ enum: AuthProvider })
+  authProvider: AuthProvider;
+
+  @ApiPropertyOptional()
+  providerId?: string;
+
+  @ApiPropertyOptional()
+  profilePictureUrl?: string;
+
   @ApiProperty()
   isActive: boolean;
 
@@ -52,6 +61,9 @@ export class UserResponseDto {
     this.currency = user.currency;
     this.language = user.language;
     this.timezone = user.timezone;
+    this.authProvider = user.authProvider;
+    this.providerId = user.providerId;
+    this.profilePictureUrl = user.profilePictureUrl;
     this.isActive = user.isActive;
     this.emailVerified = user.emailVerified;
     this.lastLogin = user.lastLogin;

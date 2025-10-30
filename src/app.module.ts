@@ -25,6 +25,7 @@ import { Forecast } from './forecasts/entities/forecast.entity';
 import { ForecastsModule } from './forecasts/forecasts.module';
 import { Report } from './reports/entities/report.entity';
 import { ReportsModule } from './reports/reports.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -41,7 +42,17 @@ import { ReportsModule } from './reports/reports.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Category, Invoice, PaymentMethod, Transaction, CreditCard, CreditCardTransaction, Forecast, Report],
+        entities: [
+          User,
+          Category,
+          Invoice,
+          PaymentMethod,
+          Transaction,
+          CreditCard,
+          CreditCardTransaction,
+          Forecast,
+          Report,
+        ],
         synchronize: configService.get('DB_SYNCHRONIZE') === 'true',
         logging: configService.get('DB_LOGGING') === 'true',
       }),
@@ -56,6 +67,7 @@ import { ReportsModule } from './reports/reports.module';
     CreditCardsModule,
     ForecastsModule,
     ReportsModule,
+    PassportModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

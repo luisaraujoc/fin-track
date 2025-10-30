@@ -24,6 +24,7 @@ async function bootstrap() {
     .setTitle('FinTrack API')
     .setDescription('Sistema de gestão financeira pessoal - FinTrack API')
     .setVersion('1.0')
+    .setExternalDoc('Docs json', '/api-json')
     .addTag('users', 'Operações relacionadas a usuários')
     .addTag('auth', 'Operações de autenticação')
     .addTag('transactions', 'Gestão de transações financeiras')
@@ -40,10 +41,10 @@ async function bootstrap() {
       .swagger-ui .info h2 { color: #1e40af; }
     `,
   });
-  
+
   const port = process.env.PORT ?? 8082;
   await app.listen(port);
-  
+
   console.log(`🎉 API funcionando em: http://localhost:${port}`);
   console.log(`📚 Swagger Docs: http://localhost:${port}/api`);
   console.log(`👤 Users API: http://localhost:${port}/users`);
